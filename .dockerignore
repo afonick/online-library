@@ -1,0 +1,5 @@
+.env
+.env.example
+.env.docker.example
+README.md
+docs/
