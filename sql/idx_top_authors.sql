@@ -1,0 +1,1 @@
+CREATE INDEX idx_top_authors_author_id ON top_authors(author_id);
