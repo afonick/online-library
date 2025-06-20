@@ -1,0 +1,1 @@
+CREATE INDEX idx_popular_books_book_id ON popular_books(book_id);
