@@ -1,1 +1,70 @@
 services:
+  library-api:
+    container_name: library-api
+    image: library
+    volumes:
+      - .:/app
+    env_file:
+      - .env.docker
+    command: >
+      sh -c "./entrypoint.sh"
+    restart: unless-stopped
+    depends_on:
+      - library-db
+
+
+  library-db:
+    container_name: library-db
+    image: postgres:16
+    ports:
+      - "5432:5432"
+    env_file:
+      - .env.docker
+    volumes:
+      - ./postgres_data:/var/lib/postgresql/data/
+
+  library-redis:
+    container_name: library-redis
+    image: redis:7.4
+    ports:
+      - "6379:6379"
+    depends_on:
+      - library-api
+
+  celery-worker:
+    container_name: celery-worker
+    image: library
+    volumes:
+      - .:/app
+    env_file:
+      - .env.docker
+    command: >
+      sh -c "celery -A src.core worker -l INFO"
+    restart: unless-stopped
+    depends_on:
+      - library-redis
+
+  celery-beat:
+    container_name: celery-beat
+    image: library
+    volumes:
+      - .:/app
+    env_file:
+      - .env.docker
+    command: >
+      sh -c "celery -A src.core beat -l INFO"
+    restart: unless-stopped
+    depends_on:
+      - celery-worker
+
+  library-nginx:
+    container_name: library-nginx
+    image: nginx
+    volumes:
+      - ./src/static/images:/app/src/static/
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    ports:
+      - "80:80"
+    restart: unless-stopped
+    depends_on:
+      - library-api
